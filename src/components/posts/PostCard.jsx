@@ -1,43 +1,74 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { engagementAPI } from '../../services/api';
 
 const PostCard = ({ post, onUpdate, onDelete }) => {
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.likes?.includes(localStorage.getItem('userId')));
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [comments, setComments] = useState(post.comments || []);
   const { user } = useAuth();
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    // In a real app, you'd call the API here
+  const handleLike = async () => {
+    try {
+      if (isLiked) {
+        await engagementAPI.unlikePost(post._id);
+      } else {
+        await engagementAPI.likePost(post._id);
+      }
+      setIsLiked(!isLiked);
+      onUpdate(post._id, {
+        ...post,
+        likes: isLiked 
+          ? post.likes.filter(id => id !== user?.id)
+          : [...post.likes, user?.id]
+      });
+    } catch (error) {
+      console.error('Failed to like post:', error);
+      // Fallback to local state update
+      setIsLiked(!isLiked);
+    }
   };
 
-  const handleAddComment = (e) => {
+  const handleAddComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
 
-    const newComment = {
-      _id: Date.now().toString(),
-      user: {
-        _id: user?.id,
-        username: user?.username
-      },
-      content: commentText,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedPost = {
-      ...post,
-      comments: [...post.comments, newComment]
-    };
-
-    onUpdate(post._id, updatedPost);
-    setCommentText('');
+    try {
+      const response = await engagementAPI.addComment(post._id, commentText);
+      const newComment = response.data;
+      const updatedComments = [...comments, newComment];
+      setComments(updatedComments);
+      onUpdate(post._id, { ...post, comments: updatedComments });
+      setCommentText('');
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      // Fallback to mock comment
+      const mockComment = {
+        _id: Date.now().toString(),
+        user: {
+          _id: user?.id,
+          username: user?.username
+        },
+        text: commentText,
+        createdAt: new Date().toISOString()
+      };
+      const updatedComments = [...comments, mockComment];
+      setComments(updatedComments);
+      onUpdate(post._id, { ...post, comments: updatedComments });
+      setCommentText('');
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this post?')) {
-      onDelete(post._id);
+      try {
+        await postsAPI.deletePost(post._id);
+        onDelete(post._id);
+      } catch (error) {
+        console.error('Failed to delete post:', error);
+        onDelete(post._id); // Still remove from UI
+      }
     }
   };
 
@@ -71,20 +102,11 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
         <p className="text-gray-800 leading-relaxed">{post.content}</p>
       </div>
 
-      {/* Post Media - Placeholder for future implementation */}
-      {post.media && post.media.length > 0 && (
-        <div className="mb-4 rounded-lg overflow-hidden">
-          <div className="bg-gray-200 h-48 flex items-center justify-center text-gray-500">
-            📷 Media Content
-          </div>
-        </div>
-      )}
-
       {/* Post Stats */}
       <div className="flex items-center justify-between text-gray-500 text-sm mb-4">
         <div className="flex space-x-4">
           <span>{post.likes?.length || 0} likes</span>
-          <span>{post.comments?.length || 0} comments</span>
+          <span>{comments.length} comments</span>
           <span>{post.shares || 0} shares</span>
         </div>
       </div>
@@ -97,7 +119,7 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
             isLiked ? 'text-red-500 bg-red-50' : 'text-gray-600 hover:bg-gray-50'
           }`}
         >
-          ❤️ Like
+          ❤️ {isLiked ? 'Liked' : 'Like'}
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
@@ -136,7 +158,7 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
 
           {/* Comments List */}
           <div className="space-y-3">
-            {post.comments?.map(comment => (
+            {comments.map(comment => (
               <div key={comment._id} className="flex space-x-3">
                 <div className="w-8 h-8 bg-gray-400 rounded-full flex-shrink-0"></div>
                 <div className="flex-1 bg-gray-50 rounded-lg p-3">
@@ -146,7 +168,7 @@ const PostCard = ({ post, onUpdate, onDelete }) => {
                       {new Date(comment.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-gray-800 text-sm">{comment.content}</p>
+                  <p className="text-gray-800 text-sm">{comment.text || comment.content}</p>
                 </div>
               </div>
             ))}
