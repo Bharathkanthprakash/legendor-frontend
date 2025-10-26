@@ -17,11 +17,6 @@ export const NotificationProvider = ({ children }) => {
   return (
     <NotificationContext.Provider value={{ notification, showNotification, hideNotification }}>
       {children}
-      {notification && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-        </div>
-      )}
     </NotificationContext.Provider>
   );
 };
