@@ -1,49 +1,165 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { isAuthenticated } from './utils/auth';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SocketProvider } from './contexts/SocketContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
+import Login from './pages/auth/Login';
+import Signup from './pages/auth/Signup';
 import Feed from './pages/Feed';
-// Remove this import since we're removing the upload page
-// import PostUpload from './pages/PostUpload'; 
-import Navbar from './components/Navbar';
-import './assets/styles.css';
+import Profile from './pages/Profile';
+import Messages from './pages/Messages';
+import Notifications from './pages/Notifications';
+import Explore from './pages/Explore';
+import Stories from './pages/Stories';
+import PostDetail from './pages/PostDetail';
+import Settings from './pages/Settings';
+import './App.css';
 
 const PrivateRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/login" />;
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
+  return user ? children : <Navigate to="/login" />;
+};
+
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
+  return !user ? children : <Navigate to="/feed" />;
 };
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/feed" 
-              element={
-                <PrivateRoute>
-                  <Feed />
-                </PrivateRoute>
-              } 
-            />
-            {/* REMOVE the upload route completely */}
-          </Routes>
-        </main>
-      </div>
+      <AuthProvider>
+        <SocketProvider>
+          <NotificationProvider>
+            <div className="App">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Landing />} />
+                <Route 
+                  path="/login" 
+                  element={
+                    <PublicRoute>
+                      <Login />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/signup" 
+                  element={
+                    <PublicRoute>
+                      <Signup />
+                    </PublicRoute>
+                  } 
+                />
+
+                {/* Protected Routes with Layout */}
+                <Route 
+                  path="/feed" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <Feed />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile/:userId?" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <Profile />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/messages" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <Messages />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/notifications" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <Notifications />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/explore" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <Explore />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/stories" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <Stories />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/post/:postId" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <PostDetail />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/settings" 
+                  element={
+                    <PrivateRoute>
+                      <Layout>
+                        <Settings />
+                      </Layout>
+                    </PrivateRoute>
+                  } 
+                />
+
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/feed" />} />
+              </Routes>
+            </div>
+          </NotificationProvider>
+        </SocketProvider>
+      </AuthProvider>
     </Router>
   );
 }
