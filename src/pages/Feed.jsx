@@ -1,136 +1,165 @@
-import { useEffect, useState } from "react";
-import { postsAPI } from '../services/api';
-import PostUpload from "../components/Upload/PostUpload"; // Corrected import path
-import PostCard from "../components/PostCard";
+import { useState, useEffect, useRef } from 'react';
+import { postsAPI, storiesAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import CreatePost from '../components/posts/CreatePost';
+import PostCard from '../components/posts/PostCard';
+import StoriesBar from '../components/stories/StoriesBar';
+import SuggestedUsers from '../components/sidebar/SuggestedUsers';
+import Trends from '../components/sidebar/Trends';
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);
+  const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const { user } = useAuth();
+  const observerRef = useRef();
 
-  const fetchPosts = async () => {
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  const fetchInitialData = async () => {
     try {
-      setError("");
-      const res = await postsAPI.getPosts();
+      setLoading(true);
+      const [postsResponse, storiesResponse] = await Promise.all([
+        postsAPI.getFeed(),
+        storiesAPI.getFeed()
+      ]);
       
-      // Handle different response formats
-      let postsData = [];
-      if (res.data) {
-        postsData = res.data.posts || res.data || [];
-      }
-      
-      setPosts(postsData);
+      setPosts(postsResponse.data.posts || []);
+      setStories(storiesResponse.data || []);
+      setHasMore(postsResponse.data.pagination?.hasMore || false);
     } catch (error) {
-      console.error("Error fetching posts:", error);
-      setError("Failed to load posts. Please try again.");
+      console.error('Failed to fetch feed:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMore) return;
 
-  // Refresh posts after new post is created
-  const handlePostCreated = (newPost) => {
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const response = await postsAPI.getFeed(nextPage);
+      
+      setPosts(prev => [...prev, ...(response.data.posts || [])]);
+      setPage(nextPage);
+      setHasMore(response.data.pagination?.hasMore || false);
+    } catch (error) {
+      console.error('Failed to load more posts:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleNewPost = (newPost) => {
     setPosts(prev => [newPost, ...prev]);
   };
 
-  // Refresh posts manually
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchPosts();
+  const handlePostUpdate = (postId, updates) => {
+    setPosts(prev => prev.map(post => 
+      post._id === postId ? { ...post, ...updates } : post
+    ));
   };
+
+  const handlePostDelete = (postId) => {
+    setPosts(prev => prev.filter(post => post._id !== postId));
+  };
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMorePosts();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <div className="max-w-2xl mx-auto p-4">
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading posts...</p>
+      <div className="max-w-2xl mx-auto p-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="bg-white rounded-lg shadow-md p-4 mb-4 animate-pulse">
+            <div className="flex space-x-3">
+              <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/6"></div>
+              </div>
+            </div>
+            <div className="mt-3 h-4 bg-gray-300 rounded w-3/4"></div>
           </div>
-        </div>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <div className="max-w-2xl mx-auto p-4">
-        {/* Header with Refresh Button */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Sports Feed</h1>
-          <button 
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
-          >
-            <span className={refreshing ? "animate-spin" : ""}>🔄</span>
-            <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
-          </button>
-        </div>
-        
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600">{error}</p>
-            <button 
-              onClick={handleRefresh}
-              className="mt-2 text-red-600 hover:text-red-700 underline"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-        
-        {/* Post Upload Component */}
-        <PostUpload onPostCreated={handlePostCreated} />
-        
+    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 p-4">
+      {/* Main Content */}
+      <div className="lg:col-span-3 space-y-6">
+        {/* Stories */}
+        <StoriesBar stories={stories} />
+
+        {/* Create Post */}
+        <CreatePost onPostCreated={handleNewPost} />
+
         {/* Posts Feed */}
         <div className="space-y-6">
-          {posts.length > 0 ? (
-            posts.map((post) => (
-              <PostCard key={post._id} post={post} />
-            ))
-          ) : (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
-              <div className="text-6xl mb-4">🏀</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
-              <p className="text-gray-500 mb-4">Be the first to share your sports moments!</p>
-              {!error && (
-                <button 
-                  onClick={() => document.querySelector('textarea')?.focus()}
-                  className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  Create First Post
-                </button>
-              )}
-            </div>
-          )}
+          {posts.map(post => (
+            <PostCard
+              key={post._id}
+              post={post}
+              onUpdate={handlePostUpdate}
+              onDelete={handlePostDelete}
+            />
+          ))}
         </div>
 
-        {/* Loading indicator for refresh */}
-        {refreshing && (
-          <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg animate-pulse">
-            🔄 Refreshing posts...
+        {/* Loading More */}
+        {loadingMore && (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
           </div>
         )}
 
-        {/* Load More Button for future pagination */}
-        {posts.length > 0 && (
-          <div className="text-center mt-8">
-            <button 
-              onClick={handleRefresh}
-              className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Load More Posts
-            </button>
+        {/* Observer element for infinite scroll */}
+        {hasMore && !loadingMore && (
+          <div ref={observerRef} className="h-10"></div>
+        )}
+
+        {/* No posts message */}
+        {posts.length === 0 && !loading && (
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <div className="text-6xl mb-4">🏀</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No posts yet
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Follow some users or create the first post in your network!
+            </p>
           </div>
         )}
+      </div>
+
+      {/* Sidebar */}
+      <div className="lg:col-span-1 space-y-6">
+        <SuggestedUsers />
+        <Trends />
       </div>
     </div>
   );
