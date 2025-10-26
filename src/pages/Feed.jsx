@@ -25,15 +25,18 @@ const Feed = () => {
     try {
       setLoading(true);
       const [postsResponse, storiesResponse] = await Promise.all([
-        postsAPI.getFeed(),
+        postsAPI.getFeed(1, 10),
         storiesAPI.getFeed()
       ]);
       
-      setPosts(postsResponse.data.posts || []);
+      setPosts(postsResponse.data || []);
       setStories(storiesResponse.data || []);
-      setHasMore(postsResponse.data.pagination?.hasMore || false);
+      setHasMore(postsResponse.data?.length === 10); // If we got 10 posts, there might be more
     } catch (error) {
       console.error('Failed to fetch feed:', error);
+      // Set mock data if API fails
+      setPosts(getMockPosts());
+      setStories([]);
     } finally {
       setLoading(false);
     }
@@ -45,13 +48,18 @@ const Feed = () => {
     try {
       setLoadingMore(true);
       const nextPage = page + 1;
-      const response = await postsAPI.getFeed(nextPage);
+      const response = await postsAPI.getFeed(nextPage, 10);
       
-      setPosts(prev => [...prev, ...(response.data.posts || [])]);
-      setPage(nextPage);
-      setHasMore(response.data.pagination?.hasMore || false);
+      if (response.data && response.data.length > 0) {
+        setPosts(prev => [...prev, ...response.data]);
+        setPage(nextPage);
+        setHasMore(response.data.length === 10);
+      } else {
+        setHasMore(false);
+      }
     } catch (error) {
       console.error('Failed to load more posts:', error);
+      setHasMore(false);
     } finally {
       setLoadingMore(false);
     }
@@ -70,6 +78,45 @@ const Feed = () => {
   const handlePostDelete = (postId) => {
     setPosts(prev => prev.filter(post => post._id !== postId));
   };
+
+  // Mock data for development
+  const getMockPosts = () => [
+    {
+      _id: '1',
+      content: 'Welcome to Legendor! 🚀 Connect with sports enthusiasts and share your legendary moments.',
+      user: {
+        _id: '1',
+        username: 'legendor_team',
+        avatar: ''
+      },
+      likes: ['1', '2', '3'],
+      comments: [
+        {
+          _id: '1',
+          user: { username: 'sports_fan', avatar: '' },
+          text: 'Excited to be here!',
+          createdAt: new Date().toISOString()
+        }
+      ],
+      shares: 2,
+      createdAt: new Date().toISOString(),
+      media: []
+    },
+    {
+      _id: '2',
+      content: 'Just scored my personal best in basketball! 🏀 Feeling legendary today!',
+      user: {
+        _id: '2',
+        username: 'baller_pro',
+        avatar: ''
+      },
+      likes: ['1', '2'],
+      comments: [],
+      shares: 0,
+      createdAt: new Date().toISOString(),
+      media: []
+    }
+  ];
 
   // Infinite scroll observer
   useEffect(() => {
@@ -152,6 +199,12 @@ const Feed = () => {
             <p className="text-gray-600 mb-4">
               Follow some users or create the first post in your network!
             </p>
+            <button 
+              onClick={fetchInitialData}
+              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            >
+              Refresh Feed
+            </button>
           </div>
         )}
       </div>
