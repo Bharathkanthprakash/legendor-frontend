@@ -38,11 +38,10 @@ const Profile = () => {
       }
     } catch (error) {
       console.error('Failed to fetch profile data:', error);
-      // Mock data for development
       setProfileUser({
         _id: userId || currentUser?.id,
-        username: isOwnProfile ? currentUser?.username : 'example_user',
-        bio: 'Sports enthusiast and fitness lover. Always ready for the next challenge! 🏀💪',
+        username: isOwnProfile ? currentUser?.username : 'champion_athlete',
+        bio: '🏀 Basketball enthusiast | Fitness lover | Always pushing limits 💪\nTurning dreams into reality, one game at a time.',
         followers: 1250,
         following: 543,
         posts: 47,
@@ -51,34 +50,21 @@ const Profile = () => {
       setPosts([
         {
           _id: '1',
-          content: 'Just hit a new personal record in the gym today! 💪 So proud of the progress.',
+          content: 'Just hit a new personal record in the gym today! 🏋️‍♂️ Consistency is key to success. What are your fitness goals?',
           user: {
             _id: userId || currentUser?.id,
-            username: isOwnProfile ? currentUser?.username : 'example_user'
+            username: isOwnProfile ? currentUser?.username : 'champion_athlete'
           },
-          likes: ['1', '2', '3'],
+          likes: ['1', '2', '3', '4'],
           comments: [
             {
               _id: '1',
-              user: { username: 'fitness_fan' },
-              text: 'Great work! Keep it up!',
+              user: { username: 'gym_buddy' },
+              text: 'Amazing progress! Keep going 💪',
               createdAt: new Date().toISOString()
             }
           ],
-          shares: 2,
-          createdAt: new Date().toISOString(),
-          media: []
-        },
-        {
-          _id: '2',
-          content: 'Beautiful day for some outdoor basketball! 🏀 Who else is hitting the court?',
-          user: {
-            _id: userId || currentUser?.id,
-            username: isOwnProfile ? currentUser?.username : 'example_user'
-          },
-          likes: ['1', '2'],
-          comments: [],
-          shares: 0,
+          shares: 3,
           createdAt: new Date().toISOString(),
           media: []
         }
@@ -88,44 +74,17 @@ const Profile = () => {
     }
   };
 
-  const handleFollow = async () => {
-    if (!profileUser) return;
-
-    try {
-      if (isFollowing) {
-        await profilesAPI.unfollow(profileUser._id);
-      } else {
-        await profilesAPI.follow(profileUser._id);
-      }
-      setIsFollowing(!isFollowing);
-      setProfileUser(prev => ({
-        ...prev,
-        followers: isFollowing ? prev.followers - 1 : prev.followers + 1
-      }));
-    } catch (error) {
-      console.error('Failed to follow/unfollow:', error);
-    }
-  };
-
-  const handlePostUpdate = (postId, updates) => {
-    setPosts(prev => prev.map(post => 
-      post._id === postId ? { ...post, ...updates } : post
-    ));
-  };
-
-  const handlePostDelete = (postId) => {
-    setPosts(prev => prev.filter(post => post._id !== postId));
-  };
-
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-20 h-20 bg-gray-300 rounded-full"></div>
-            <div className="flex-1">
-              <div className="h-6 bg-gray-300 rounded w-1/4 mb-2"></div>
-              <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-6">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6 animate-pulse">
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="w-20 h-20 bg-gray-300 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-6 bg-gray-300 rounded w-1/4 mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -135,97 +94,106 @@ const Profile = () => {
 
   if (!profileUser) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">😕</div>
-          <h3 className="text-xl font-semibold mb-2">Profile not found</h3>
-          <p className="text-gray-600">The user you're looking for doesn't exist.</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-6">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="text-center py-12 bg-white rounded-2xl shadow-lg">
+            <div className="text-6xl mb-4">😕</div>
+            <h3 className="text-xl font-semibold mb-2">Profile not found</h3>
+            <p className="text-gray-600">The user you're looking for doesn't exist.</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      {/* Profile Header */}
-      <ProfileHeader
-        user={profileUser}
-        isOwnProfile={isOwnProfile}
-        isFollowing={isFollowing}
-        onFollow={handleFollow}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-6">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        {/* Profile Header */}
+        <ProfileHeader
+          user={profileUser}
+          isOwnProfile={isOwnProfile}
+          isFollowing={isFollowing}
+          onFollow={() => setIsFollowing(!isFollowing)}
+        />
 
-      {/* Profile Tabs */}
-      <ProfileTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        stats={{
-          posts: posts.length,
-          followers: profileUser.followers || 0,
-          following: profileUser.following || 0
-        }}
-      />
+        {/* Profile Tabs */}
+        <ProfileTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          stats={{
+            posts: posts.length,
+            followers: profileUser.followers || 0,
+            following: profileUser.following || 0
+          }}
+        />
 
-      {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow-md">
-        {activeTab === 'posts' && (
-          <div className="p-6">
-            {posts.length > 0 ? (
+        {/* Tab Content */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+          {activeTab === 'posts' && (
+            <div className="p-6">
+              {posts.length > 0 ? (
+                <div className="space-y-6">
+                  {posts.map(post => (
+                    <PostCard
+                      key={post._id}
+                      post={post}
+                      onUpdate={(postId, updates) => setPosts(prev => prev.map(p => p._id === postId ? { ...p, ...updates } : p))}
+                      onDelete={(postId) => setPosts(prev => prev.filter(p => p._id !== postId))}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📝</div>
+                  <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
+                  <p className="text-gray-600">
+                    {isOwnProfile 
+                      ? "You haven't created any posts yet. Share your first legendary moment!" 
+                      : "This user hasn't created any posts yet."
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'about' && (
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-6 text-gray-900">About</h3>
               <div className="space-y-6">
-                {posts.map(post => (
-                  <PostCard
-                    key={post._id}
-                    post={post}
-                    onUpdate={handlePostUpdate}
-                    onDelete={handlePostDelete}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📝</div>
-                <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
-                <p className="text-gray-600">
-                  {isOwnProfile 
-                    ? "You haven't created any posts yet. Share your first post!" 
-                    : "This user hasn't created any posts yet."
-                  }
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'about' && (
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">About</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Bio</h4>
-                <p className="text-gray-700">{profileUser.bio || 'No bio yet.'}</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Joined</h4>
-                <p className="text-gray-700">
-                  {profileUser.createdAt 
-                    ? new Date(profileUser.createdAt).toLocaleDateString()
-                    : 'Recently'
-                  }
-                </p>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Bio</h4>
+                  <p className="text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-4">
+                    {profileUser.bio || 'No bio yet. This user prefers to keep an air of mystery.'}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
+                    <h4 className="font-medium text-gray-900 mb-2">Sports Interests</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Basketball</span>
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Fitness</span>
+                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">Training</span>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4">
+                    <h4 className="font-medium text-gray-900 mb-2">Member Since</h4>
+                    <p className="text-gray-700">
+                      {profileUser.createdAt 
+                        ? new Date(profileUser.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long'
+                          })
+                        : 'Recently'
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'photos' && (
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Photos</h3>
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📷</div>
-              <p className="text-gray-600">No photos uploaded yet.</p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
