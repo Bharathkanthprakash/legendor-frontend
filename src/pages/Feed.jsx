@@ -41,6 +41,29 @@ const Feed = () => {
     }
   };
 
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const response = await postsAPI.getFeed(nextPage, 10);
+      
+      if (response.data && response.data.length > 0) {
+        setPosts(prev => [...prev, ...response.data]);
+        setPage(nextPage);
+        setHasMore(response.data.length === 10);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Failed to load more posts:', error);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const getMockPosts = () => [
     {
       _id: '1',
@@ -79,25 +102,45 @@ const Feed = () => {
     }
   ];
 
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMorePosts();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore]);
+
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="animate-pulse space-y-6">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <div className="flex space-x-3">
-                <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
-                  <div className="h-3 bg-gray-300 rounded w-1/6"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-pulse space-y-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <div className="flex space-x-3">
+                  <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
+                    <div className="h-3 bg-gray-300 rounded w-1/6"></div>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-300 rounded w-1/2"></div>
                 </div>
               </div>
-              <div className="mt-4 space-y-2">
-                <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -111,8 +154,8 @@ const Feed = () => {
           <div className="lg:col-span-3 space-y-6">
             {/* Welcome Card */}
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
-              <h1 className="text-2xl font-bold mb-2">Welcome back, {user?.username}!
-                              <p className="text-blue-100">Ready to share your next legendary moment?</p>
+              <h1 className="text-2xl font-bold mb-2">Welcome back, {user?.username}! 👋</h1>
+              <p className="text-blue-100">Ready to share your next legendary moment?</p>
             </div>
 
             {/* Stories */}
@@ -132,6 +175,18 @@ const Feed = () => {
                 />
               ))}
             </div>
+
+            {/* Loading More */}
+            {loadingMore && (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+              </div>
+            )}
+
+            {/* Observer element for infinite scroll */}
+            {hasMore && !loadingMore && (
+              <div ref={observerRef} className="h-10"></div>
+            )}
 
             {/* No posts message */}
             {posts.length === 0 && !loading && (
