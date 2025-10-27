@@ -18,7 +18,6 @@ const CreatePost = ({ onPostCreated }) => {
       setContent('');
     } catch (error) {
       console.error('Failed to create post:', error);
-      // Fallback to mock data if API fails
       const mockPost = {
         _id: Date.now().toString(),
         content,
@@ -40,35 +39,38 @@ const CreatePost = ({ onPostCreated }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-      <div className="flex space-x-3">
-        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+      <div className="flex space-x-4">
+        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
           {user?.username?.charAt(0)?.toUpperCase() || 'U'}
         </div>
         <form className="flex-1" onSubmit={handleSubmit}>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="What's on your mind?"
-            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="What's on your mind? Share your legendary moment..."
+            className="w-full p-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             rows="3"
           />
-          <div className="flex justify-between items-center mt-3">
-            <div className="flex space-x-2 text-gray-500">
-              <button type="button" className="p-2 hover:bg-gray-100 rounded-lg">
-                📷
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex space-x-2">
+              <button type="button" className="p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
+                <span className="text-xl">📷</span>
               </button>
-              <button type="button" className="p-2 hover:bg-gray-100 rounded-lg">
-                🎥
+              <button type="button" className="p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
+                <span className="text-xl">🎥</span>
               </button>
-              <button type="button" className="p-2 hover:bg-gray-100 rounded-lg">
-                😊
+              <button type="button" className="p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
+                <span className="text-xl">😊</span>
+              </button>
+              <button type="button" className="p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
+                <span className="text-xl">🏀</span>
               </button>
             </div>
             <button
               type="submit"
               disabled={!content.trim() || isSubmitting}
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
             >
               {isSubmitting ? 'Posting...' : 'Post'}
             </button>
