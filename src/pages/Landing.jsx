@@ -146,7 +146,7 @@ const Landing = () => {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-6">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 font-bold">🏆</span>
+                <span className="text-blue-600 font-bold">L</span>
               </div>
               <span className="text-xl font-bold">Legendor</span>
             </div>
