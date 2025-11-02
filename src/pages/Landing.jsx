@@ -10,15 +10,14 @@ const Landing = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-xl">L</span>
-              </div>
+                <span className="text-blue-600 font-bold text-xl">&#x1F3C6</span>                               
               <span className="text-white text-xl font-bold">Legendor</span>
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-white hover:text-blue-200 transition-colors">Features</a>
-              <a href="#about" className="text-white hover:text-blue-200 transition-colors">About</a>
-              <a href="#contact" className="text-white hover:text-blue-200 transition-colors">Contact</a>
+              <a href="#features" className="text-white hover:text-blue-200 transition-colors">Features   </a>
+              <a href="#about" className="text-white hover:text-blue-200 transition-colors">About   </a>
+              <a href="#contact" className="text-white hover:text-blue-200 transition-colors">Contact   </a>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -27,12 +26,14 @@ const Landing = () => {
                 className="text-white hover:text-blue-200 transition-colors px-4 py-2"
               >
                 Login
+                
               </Link>
               <Link 
                 to="/signup" 
                 className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
               >
                 Get Started
+                
               </Link>
             </div>
           </div>
@@ -58,12 +59,14 @@ const Landing = () => {
               className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-yellow-500 hover:to-orange-600 transition-all transform hover:scale-105 shadow-2xl"
             >
               Start Your Journey
+              
             </Link>
             <Link 
               to="/login" 
               className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:bg-opacity-10 transition-all"
             >
               Explore Community
+              
             </Link>
           </div>
         </div>
