@@ -10,16 +10,14 @@ const Landing = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-xl">&#x1F3C6</span>                               
+                <span className="text-blue-600 font-bold text-xl">🏆 </span>                               
               <span className="text-white text-xl font-bold">Legendor</span>
-            </div>
-            
+            </div>            
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-white hover:text-blue-200 transition-colors">Features   </a>
               <a href="#about" className="text-white hover:text-blue-200 transition-colors">About   </a>
               <a href="#contact" className="text-white hover:text-blue-200 transition-colors">Contact   </a>
-            </div>
-            
+            </div>            
             <div className="flex items-center space-x-4">
               <Link 
                 to="/login" 
@@ -32,14 +30,12 @@ const Landing = () => {
                 to="/signup" 
                 className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
               >
-                Get Started
-                
+                Get Started                
               </Link>
             </div>
           </div>
         </div>
       </nav>
-
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-20">
         <div className="text-center text-white max-w-4xl mx-auto">
